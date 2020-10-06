@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
 
 std::string INPUT; // will be '/' if set to stdin
 std::string OUTPUT; // will be '/' if set to stdout
@@ -36,11 +37,33 @@ bool isArgValid(int argc, char* argv[]){
     return true;
 }
 
+std::ifstream readInput(){
+    return std::ifstream(INPUT);
+}
+
+std::vector<std::vector<char>> getSudokuFromLine(std::string& rawLine){
+    std::vector<std::vector<char>> sudoku(9);
+    std::vector<char> sudokuRow;
+    for (size_t row = 0; row < 9;row++){
+        for (int col = 0; col < 9; col++) {
+            sudoku[row].push_back(rawLine[(row*9)+col] - '0');
+        }
+    }
+    return sudoku;
+}
+
+
 
 int main(int argc, char* argv[]) {
     if (!isArgValid(argc,argv)){
         std::cerr << "BRUH" << "\n";
         return 1;
+    }
+    std::ifstream inputFile = readInput();
+    std::string buffer;
+    while (std::getline(inputFile,buffer)){
+        getSudokuFromLine(buffer);
+
     }
     return 0;
 }
