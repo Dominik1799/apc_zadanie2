@@ -46,10 +46,57 @@ std::vector<std::vector<char>> getSudokuFromLine(std::string& rawLine){
     std::vector<char> sudokuRow;
     for (size_t row = 0; row < 9;row++){
         for (int col = 0; col < 9; col++) {
+            if (rawLine[(row*9)+col] == '.'){
+                sudoku[row].push_back(0);
+                continue;
+            }
             sudoku[row].push_back(rawLine[(row*9)+col] - '0');
         }
     }
     return sudoku;
+}
+
+bool isColumnPossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
+    for (size_t i = 0; i < 9; i++){
+        if (i != col && sudoku[i][col] == value){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isRowPossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
+    for (size_t i = 0; i < 9; i++){
+        if (i != col && sudoku[row][i] == value){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isSquarePossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
+
+}
+
+
+bool isPossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
+    return true;
+}
+
+void solve(std::vector<std::vector<char>>& sudoku){
+    for (size_t row = 0; row < 9; row++){
+        for (size_t col = 0; col < 9; col++){
+            if (sudoku[row][col] == 0){
+                for (char i = 1; i < 10; i++){
+                    if (isPossible(sudoku,row,col,i)){
+                        sudoku[row][col] = i;
+                        solve(sudoku);
+                        sudoku[row][col] = 0;
+                    }
+                }
+            }
+        }
+    }
 }
 
 
