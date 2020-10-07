@@ -118,6 +118,10 @@ void printOutput(std::vector<std::string>& results){
     for(const auto& line : results){
         (OUTPUT != "/" ? outputFile : std::cout) << line << "\n";
     }
+    if (OUTPUT != "/" && outputFile.fail()) {
+        std::cerr << "Output error";
+        exit(1);
+    }
 }
 
 
@@ -159,7 +163,7 @@ bool isSolvedCorrectly(std::vector<std::vector<char>>& sudoku){
 int main(int argc, char* argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
     if (!isArgValid(argc,argv)){
-        std::cerr << "BRUH" << "\n";
+        std::cerr << "Arguments are not valid" << "\n";
         return 1;
     }
     std::vector<std::vector<char>> currentGame;
@@ -180,10 +184,12 @@ int main(int argc, char* argv[]) {
         isSolved = false;
     }
     if (isFileEmpty){
-        std::cerr << "File is empty!";
+        std::cerr << "input file error. Empty or non-existent";
         return 1;
     }
     printOutput(results);
+    if (INPUT != "/" && !inputFile.eof())
+        return 1;
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     std::cout << duration.count() << " microseconds";
