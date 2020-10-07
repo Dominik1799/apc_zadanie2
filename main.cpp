@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <chrono>
 
 std::string INPUT; // will be '/' if set to stdin
 std::string OUTPUT; // will be '/' if set to stdout
@@ -42,13 +43,22 @@ std::ifstream readInput(){
 std::vector<std::vector<char>> getSudokuFromLine(std::string& rawLine){
     std::vector<std::vector<char>> sudoku(9);
     std::vector<char> sudokuRow;
+    int tempNumber;
     for (size_t row = 0; row < 9;row++){
         for (int col = 0; col < 9; col++) {
             if (rawLine[(row*9)+col] == '.'){
                 sudoku[row].push_back(0);
                 continue;
             }
-            sudoku[row].push_back(rawLine[(row*9)+col] - '0');
+//            sudoku[row].push_back(rawLine[(row*9)+col] - '0');
+            tempNumber = rawLine[(row*9)+col] - '0';
+            if (tempNumber < 10 && tempNumber >= 0){
+                sudoku[row].push_back(tempNumber);
+            }
+        }
+        if(sudoku[row].size() != 9){
+            std::cerr << "Invalid input";
+            exit(1);
         }
     }
     return sudoku;
@@ -56,7 +66,7 @@ std::vector<std::vector<char>> getSudokuFromLine(std::string& rawLine){
 
 bool isColumnPossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
     for (size_t i = 0; i < 9; i++){
-        if (i != col && sudoku[i][col] == value){
+        if (i != row && sudoku[i][col] == value){
             return false;
         }
     }
@@ -77,7 +87,7 @@ bool isSquarePossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t
     size_t squareCol = col - (col % 3);
     for (int i = squareRow; i < squareRow+3; ++i) {
         for (int j = squareCol; j < squareCol+3; ++j) {
-            if (sudoku[i][j] == value){
+            if (row != i && col != j && sudoku[i][j] == value){
                 return false;
             }
         }
@@ -99,13 +109,15 @@ std::string sudokuToString(std::vector<std::vector<char>> sudoku){
         for (int col = 0; col < 9; col++) {
             result.push_back((char)(sudoku[row][col] + '0'));
         }
-
     }
     return result;
 }
 
-void printOutput(std::string& results){
+void printOutput(std::vector<std::string>& results){
     std::ofstream  outputFile(OUTPUT);
+    for(const auto& line : results){
+        (OUTPUT != "/" ? outputFile : std::cout) << line << "\n";
+    }
 }
 
 
@@ -119,7 +131,8 @@ void solve(std::vector<std::vector<char>>& sudoku,bool& isSolved){
                         solve(sudoku,isSolved);
                         if (!isSolved){
                             sudoku[row][col] = 0;
-                        }
+                        } else
+                            return;
                     }
                 }
                 return;
@@ -129,11 +142,22 @@ void solve(std::vector<std::vector<char>>& sudoku,bool& isSolved){
     isSolved = true;
 }
 
+bool isSolvedCorrectly(std::vector<std::vector<char>>& sudoku){
+    for (size_t row = 0; row < 9;row++){
+        for (int col = 0; col < 9; col++) {
+            if (!isPossible(sudoku,row,col,sudoku[row][col]))
+                return false;
+        }
+    }
+    return true;
+}
+
 
 
 
 
 int main(int argc, char* argv[]) {
+    auto start = std::chrono::high_resolution_clock::now();
     if (!isArgValid(argc,argv)){
         std::cerr << "BRUH" << "\n";
         return 1;
@@ -142,19 +166,27 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> results;
     std::ifstream inputFile = readInput();
     std::string buffer;
-    std::vector<std::vector<char>> v;
     bool isSolved = false;
-    while (std::getline(inputFile,buffer)){
+    bool isFileEmpty = true;
+    while (std::getline(INPUT != "/" ? inputFile : std::cin,buffer)){
+        isFileEmpty = false;
         currentGame = getSudokuFromLine(buffer);
-        std::cout << "\n";
         solve(currentGame, isSolved);
-        if(isSolved){
+        if(isSolved && isSolvedCorrectly(currentGame)){
             results.push_back(sudokuToString(currentGame));
         } else{
             results.emplace_back("");
         }
         isSolved = false;
     }
+    if (isFileEmpty){
+        std::cerr << "File is empty!";
+        return 1;
+    }
+    printOutput(results);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << duration.count() << " microseconds";
 
     return 0;
 }
