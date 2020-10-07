@@ -32,8 +32,6 @@ bool isArgValid(int argc, char* argv[]){
     }
     OUTPUT = set=='i' ? "/" : OUTPUT;
     INPUT = set=='o' ? "/" : INPUT;
-    std::cout << "INPUT: " << INPUT << "\n";
-    std::cout << "OUTPUT: " << OUTPUT << "\n";
     return true;
 }
 
@@ -75,29 +73,63 @@ bool isRowPossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t co
 }
 
 bool isSquarePossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
-
+    size_t squareRow = row - (row % 3);
+    size_t squareCol = col - (col % 3);
+    for (int i = squareRow; i < squareRow+3; ++i) {
+        for (int j = squareCol; j < squareCol+3; ++j) {
+            if (sudoku[i][j] == value){
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 
 bool isPossible(std::vector<std::vector<char>>& sudoku, size_t row, size_t col, char value){
-    return true;
+    if (isRowPossible(sudoku,row,col,value) && isColumnPossible(sudoku,row,col,value) && isSquarePossible(sudoku,row,col,value)){
+        return true;
+    }
+    return false;
 }
 
-void solve(std::vector<std::vector<char>>& sudoku){
+std::string sudokuToString(std::vector<std::vector<char>> sudoku){
+    std::string result;
+    for (size_t row = 0; row < 9;row++){
+        for (int col = 0; col < 9; col++) {
+            result.push_back((char)(sudoku[row][col] + '0'));
+        }
+
+    }
+    return result;
+}
+
+void printOutput(std::string& results){
+    std::ofstream  outputFile(OUTPUT);
+}
+
+
+void solve(std::vector<std::vector<char>>& sudoku,bool& isSolved){
     for (size_t row = 0; row < 9; row++){
         for (size_t col = 0; col < 9; col++){
             if (sudoku[row][col] == 0){
                 for (char i = 1; i < 10; i++){
                     if (isPossible(sudoku,row,col,i)){
                         sudoku[row][col] = i;
-                        solve(sudoku);
-                        sudoku[row][col] = 0;
+                        solve(sudoku,isSolved);
+                        if (!isSolved){
+                            sudoku[row][col] = 0;
+                        }
                     }
                 }
+                return;
             }
         }
     }
+    isSolved = true;
 }
+
+
 
 
 
@@ -106,11 +138,23 @@ int main(int argc, char* argv[]) {
         std::cerr << "BRUH" << "\n";
         return 1;
     }
+    std::vector<std::vector<char>> currentGame;
+    std::vector<std::string> results;
     std::ifstream inputFile = readInput();
     std::string buffer;
+    std::vector<std::vector<char>> v;
+    bool isSolved = false;
     while (std::getline(inputFile,buffer)){
-        getSudokuFromLine(buffer);
-
+        currentGame = getSudokuFromLine(buffer);
+        std::cout << "\n";
+        solve(currentGame, isSolved);
+        if(isSolved){
+            results.push_back(sudokuToString(currentGame));
+        } else{
+            results.emplace_back("");
+        }
+        isSolved = false;
     }
+
     return 0;
 }
